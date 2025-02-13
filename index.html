@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>Patient Information Form</title>
+    <script type="text/babel">
+        function NameForm({firstName, setFirstName, lastName, setLastName, nextStep}) {
+            const nameRegex = /^[A-Za-z\s'-]+$/;
+            const [firstNameError, setFirstNameError] = React.useState("");
+            const [lastNameError, setLastNameError] = React.useState("");
+
+            const handleSubmit = (event) => {
+                event.preventDefault();
+
+                setFirstNameError("");
+                setLastNameError("");
+
+                let valid = true;
+                if (!nameRegex.test(firstName)) {
+                    setFirstNameError("Please enter a valid first name (letters, spaces, apostrophes, and hyphens are allowed).");
+                    valid = false;
+                }
+                if (!nameRegex.test(lastName)) {
+                    setLastNameError("Please enter a valid last name (letters, spaces, apostrophes, and hyphens are allowed).");
+                    valid = false;
+                }
+
+                if (valid) {
+                    nextStep();
+                }
+            };
+
+            return (
+                <form className="form-group" onSubmit={handleSubmit}>
+                    <p className="h2">Name Form</p>
+                    <label htmlFor="firstName">First Name: </label>
+                    <input 
+                        type="text" 
+                        className={`form-control ${firstNameError ? 'is-invalid' : ''}`} 
+                        id="firstName" 
+                        name="firstName" 
+                        placeholder="ex) Jane"
+                        value={firstName} 
+                        onChange={(e) => setFirstName(e.target.value)} 
+                        required
+                    />
+                    {firstNameError && <div className="invalid-feedback">{firstNameError}</div>}<br/>
+                    
+                    <label htmlFor="lastName">Last Name: </label>
+                    <input 
+                        type="text" 
+                        className={`form-control ${lastNameError ? 'is-invalid' : ''}`} 
+                        id="lastName" 
+                        name="lastName" 
+                        placeholder="ex) Doe"
+                        value={lastName} 
+                        onChange={(e) => setLastName(e.target.value)} 
+                        required 
+                    />
+                    {lastNameError && <div className="invalid-feedback">{lastNameError}</div>}<br/>
+                    
+                    <input type="submit" className="btn btn-primary" value="Next" />
+                </form>
+            );
+        }
+
+        function DetailForm({ dateOfBirth, setDateOfBirth, healthCardNum, setHealthCardNum, gender, setGender, nextStep, prevStep }) {
+            const [dateOfBirthError, setDateOfBirthError] = React.useState("");
+            const [healthCardError, setHealthCardError] = React.useState("");
+
+            const isValidHealthCard = (cardNumber) => {
+                const digits = cardNumber.split('').map(Number);
+                const len = digits.length;
+                let sum = 0;
+                let shouldDouble = false;
+
+                for (let i = len - 1; i >= 0; i--) {
+                    let digit = digits[i];
+                    if (shouldDouble) {
+                        digit *= 2;
+                        if (digit > 9) {
+                            digit -= 9;
+                        }
+                    }
+                    sum += digit;
+                    shouldDouble = !shouldDouble;
+                }
+
+                return sum % 10 === 0;
+            };
+
+            const handleSubmit = (event) => {
+                event.preventDefault();
+
+                setDateOfBirthError("");
+                setHealthCardError("");
+
+                let isValid = true;
+
+                const today = new Date();
+                const selectedDate = new Date(dateOfBirth);
+                
+                if (selectedDate > today) {
+                    setDateOfBirthError("Date of birth cannot be in the future.");
+                    isValid = false;
+                }
+
+                const healthCardRegex = /^[0-9]{10}$/;
+                if (!healthCardRegex.test(healthCardNum)) {
+                    setHealthCardError("Health Card Number must be exactly 10 digits.");
+                    isValid = false;
+                }
+
+                if (!isValidHealthCard(healthCardNum)) {
+                    setHealthCardError("Invalid Health Card Number (Luhn check failed).");
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    nextStep();
+                }
+            };
+
+            return (
+                <form className="form-group" onSubmit={handleSubmit}>
+                    <p className="h2">Detail Form</p>
+                    
+                    <label htmlFor="dateOfBirth">Date of Birth: </label><br />
+                    <input
+                        type="date"
+                        id="dateOfBirth"
+                        name="dateOfBirth"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        required
+                        className={`form-control ${dateOfBirthError ? 'is-invalid' : ''}`}
+                    />
+                    {dateOfBirthError && <div className="invalid-feedback">{dateOfBirthError}</div>}
+                    <br />
+
+                    <label htmlFor="healthCardNum">Health Card Number: </label>
+                    <input 
+                        type="text" 
+                        id="healthCardNum" 
+                        name="healthCardNum" 
+                        value={healthCardNum} 
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '');
+                            setHealthCardNum(value);
+                        }} 
+                        required 
+                        maxLength="10"
+                        className={`form-control ${healthCardError ? 'is-invalid' : ''}`}
+                    />
+                    {healthCardError && <div className="invalid-feedback">{healthCardError}</div>}
+                    <br />
+
+                    <label htmlFor="gender">Gender: </label>
+                    <select id="gender" name="gender" class="form-control" value={gender} onChange={(e) => setGender(e.target.value)} required>
+                        <option value="">Select</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer Not to Aay">Prefer Not to Say</option>
+                    </select><br />
+
+                    <button type="button" class="btn btn-primary" onClick={prevStep}>Back</button>
+                    <input type="submit" class="btn btn-primary ml-5" value="Next" />
+                </form>
+            );
+        }
+
+
+        function Summary({firstName, lastName, dateOfBirth, healthCardNum, gender, prevStep}) {
+            return (
+                <div>
+                    <h2>Summary</h2>
+                    <table className="table">
+                        <tr>
+                            <th>First Name</th>
+                            <td>{firstName}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Name</th>
+                            <td>{lastName}</td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth</th>
+                            <td>{dateOfBirth}</td>
+                        </tr>
+                        <tr>
+                            <th>Health Card Number</th>
+                            <td>{healthCardNum}</td>
+                        </tr>
+                        <tr>
+                            <th>Gender</th>
+                            <td>{gender}</td>
+                        </tr>
+                    </table>
+                    <button className="btn btn-primary" onClick={prevStep}>Edit Details</button>
+                </div>
+            );
+        }
+
+        function App() {
+            const [step, setStep]=React.useState(1);
+            const [firstName, setFirstName]=React.useState("");
+            const [lastName, setLastName]=React.useState("");
+            const [dateOfBirth, setDateOfBirth]=React.useState("");
+            const [healthCardNum, setHealthCardNum]=React.useState("");
+            const [gender, setGender]=React.useState("");
+
+            return (
+                <div>
+                    {step === 1 && 
+                        <NameForm
+                            firstName={firstName} setFirstName={setFirstName}
+                            lastName={lastName} setLastName={setLastName}
+                            nextStep={() => setStep(2)}
+                        />
+                    }
+                    {step === 2 &&
+                        <DetailForm
+                            dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
+                            healthCardNum={healthCardNum} setHealthCardNum={setHealthCardNum}
+                            gender={gender} setGender={setGender}
+                            nextStep={() => setStep(3)}
+                            prevStep={() => setStep(1)}
+                        />
+                    }
+                    {step === 3 &&
+                        <Summary
+                            firstName={firstName} lastName={lastName}
+                            dateOfBirth={dateOfBirth} healthCardNum={healthCardNum} gender={gender}
+                            prevStep={() => setStep(2)}
+                        />
+                    }
+                </div>
+            );
+        }
+
+        const container = document.getElementById('main');
+        ReactDOM.createRoot(container).render(<App />);
+    </script>
+</head>
+<body>
+    <div class="row mt-4">
+        <div class="col-2"></div>
+        <div id="main" class="col-8"></div>
+        <div class="col-2"></div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
